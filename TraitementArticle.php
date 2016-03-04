@@ -30,7 +30,7 @@ if (!empty($Lien)){
     echo 'Lecture de ' . $Lien;
 
     $doc = new DomDocument();
-    //$doc = new DomDocument('1.0' ,'utf-8');
+    $doc = new DomDocument('1.0' ,'utf-8');
     @$doc->loadHTMLFile($Lien);
     $finder = new DomXPath($doc);       // Pour la recherche par CLASS
     
@@ -78,35 +78,34 @@ if (!empty($Lien)){
     
     
     // Les photos
-    $LesImages   = $NodesArt->item(0)->getElementsByTagName('img');
     $TabloImages = array();
+
+    if ( $Type == 'org' ) {
+        $LesImages   = $NodesArt->item(0)->getElementsByTagName('img');
+        $CheminDesImages = $NouveauBlog . '/wp-content/uploads/';
+
+        foreach ($LesImages as $key => $NodeImg) {
+            $IdImg = 10000 * intval($Page.$NumArt.$key);
+            //$IdImg = $IdArt + 10000 + $key;
+            
+            $LienImage = $NodeImg->getAttribute('src');
     
+            // On ne garde que la grande
+            if (substr_count($LienImage, 'perlbal.hi-pi.com') and substr_count($LienImage, '/mn/')){
+                $LienImage = str_replace('/mn/', '/gd/', $LienImage);
+                //$NodeImg->setAttribute('src', $LienImage);
+            }
     
-    $CheminDesImages = $Type == 'org' ? $NouveauBlog . '/wp-content/uploads/' : preg_replace('/\./', '.files.', $NouveauBlog, 1) . '/';
-
-
-    foreach ($LesImages as $key => $NodeImg) {
-        $IdImg = 10000 * intval($Page.$NumArt.$key);
-        //$IdImg = $IdArt + 10000 + $key;
-        
-        $LienImage = $NodeImg->getAttribute('src');
-
-        // On ne garde que la grande
-        if (substr_count($LienImage, 'perlbal.hi-pi.com') and substr_count($LienImage, '/mn/')){
-            $LienImage = str_replace('/mn/', '/gd/', $LienImage);
-            //$NodeImg->setAttribute('src', $LienImage);
-        }
-
-        $NodeImg->setAttribute('classname', 'alignnone size-full wp-image-' . $IdImg);
-
-        if (substr_count($LienImage, 'perlbal.hi-pi.com'))
-            $NodeImg->setAttribute('width', '300');
-        
-        $NodeImg->setAttribute('src', $CheminDesImages.$DateDossier.'/'.basename($LienImage));
-        
-        $TabloImages[$IdImg] = $LienImage;
-    }     
+            $NodeImg->setAttribute('classname', 'alignnone size-full wp-image-' . $IdImg);
     
+            if (substr_count($LienImage, 'perlbal.hi-pi.com'))
+                $NodeImg->setAttribute('width', '300');
+            
+            $NodeImg->setAttribute('src', $CheminDesImages.$DateDossier.'/'.basename($LienImage));
+            
+            $TabloImages[$IdImg] = $LienImage;
+        }     
+    } 
     
     if ($NumCom == 1){
         // Le texte de l'article
@@ -138,7 +137,7 @@ if (!empty($Lien)){
         // L'article
         $XML .= '
         <item>
-            <title>'.utf8_decode($Titre).'</title>
+            <title>'.$Titre.'</title>
             <link>'.$NouveauBlog.'/?p='.$IdArt.'</link>
             <pubDate>'.DateCom2DateXML($Date, 2).'</pubDate>
             <dc:creator><![CDATA['.$VotreNom.']]></dc:creator>
@@ -215,7 +214,7 @@ if (!empty($Lien)){
                     <wp:comment_author_IP>::1</wp:comment_author_IP>
                     <wp:comment_date>'.$DateCom.'</wp:comment_date>
                     <wp:comment_date_gmt>'.$DateCom.'</wp:comment_date_gmt>
-                    <wp:comment_content><![CDATA['.utf8_decode($Commentaire).']]></wp:comment_content>
+                    <wp:comment_content><![CDATA['.$Commentaire.']]></wp:comment_content>
                     <wp:comment_approved>1</wp:comment_approved>
                     <wp:comment_type></wp:comment_type>
                     <wp:comment_parent>0</wp:comment_parent>
@@ -240,12 +239,12 @@ if (!empty($Lien)){
             
             $XML .= '
                 <item>
-                    <title>'.utf8_decode($Titre).' '.$FichSeul.'</title>
+                    <title>'.$Titre.' '.$FichSeul.'</title>
                     <link>'.$NouveauBlog.'/?attachment_id='.$IdImg.'</link>
                     <pubDate>'.DateCom2DateXML($Date, 2).'</pubDate>
                     <dc:creator><![CDATA['.$VotreNom.']]></dc:creator>
                     <guid isPermaLink="false">'.$CheminDesImages.$DateDossier.'/'.$FichSeul.'</guid>
-                    <description>'.utf8_decode($Titre).'</description>
+                    <description>'.$Titre.'</description>
                     <content:encoded><![CDATA[]]></content:encoded>
                     <excerpt:encoded><![CDATA[]]></excerpt:encoded>
                     <wp:post_id>'.$IdImg.'</wp:post_id>
